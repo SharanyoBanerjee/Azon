@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import "./App.css"
 
 const products = [
   { id: 1, name: "Premium Smartphone", brand: "Apple", category: "Electronics", price: 80000, desc: "A powerful smartphone with a clear display." },
@@ -45,11 +46,23 @@ const Icon = ({ name, size = 18, color = "currentColor" }) => {
   )
 }
 
-const Navbar = ({ page, setPage, cartItems, wishItems, searchVal, setSearchVal, darkOn, setDarkOn, orange, peach, cardBg, textCol, borderCol }) => {
-  const cartCount = cartItems.reduce((s, i) => s + i.qty, 0)
+const Navbar = ({ page, goTo, cartItems, wishItems, searchVal, setSearchVal, darkOn, setDarkOn, orange, peach, cardBg, textCol, borderCol }) => {
+  const cartTotalQty = cartItems.reduce((s, i) => s + i.qty, 0)
+  
+  const navBtnStyle = (btnPage) => ({
+    background: "none",
+    border: "none",
+    color: "white",
+    cursor: "pointer",
+    fontSize: 13,
+    padding: "4px 0",
+    borderBottom: page === btnPage ? "2px solid white" : "2px solid transparent",
+    transition: "border-bottom 0.2s"
+  })
+
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 100, background: orange, height: "60px", display: "flex", alignItems: "center", padding: "0 24px", gap: 16 }}>
-      <span onClick={() => setPage("home")} style={{ fontSize: 24, fontWeight: "bold", color: "white", cursor: "pointer" }}>
+      <span onClick={() => goTo("home")} style={{ fontSize: 24, fontWeight: "bold", color: "white", cursor: "pointer" }}>
         <span style={{ color: peach }}>Az</span>on
       </span>
       <div style={{ flex: 1, display: "flex" }}>
@@ -61,10 +74,14 @@ const Navbar = ({ page, setPage, cartItems, wishItems, searchVal, setSearchVal, 
         <button style={{ background: peach, border: "none", borderRadius: "0 4px 4px 0", padding: "0 10px", cursor: "pointer", fontWeight: "bold" }}>Search</button>
       </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "white", cursor: "pointer", fontSize: 13 }}>Home</button>
-        <button onClick={() => setPage("wish")} style={{ background: "none", border: "none", color: "white", cursor: "pointer", fontSize: 13 }}>Wishlist ({wishItems.length})</button>
-        <button onClick={() => setPage("cart")} style={{ background: "none", border: "none", color: "white", cursor: "pointer", fontSize: 13 }}>Cart ({cartCount})</button>
-        <button onClick={() => setPage("settings")} style={{ background: "none", border: "none", color: "white", cursor: "pointer", fontSize: 13 }}>Account</button>
+        <button onClick={() => goTo("home")} style={navBtnStyle("home")}>Home</button>
+        <button onClick={() => goTo("wish")} style={navBtnStyle("wish")}>
+          Wishlist {wishItems.length > 0 && <span>({wishItems.length})</span>}
+        </button>
+        <button onClick={() => goTo("cart")} style={navBtnStyle("cart")}>
+          Cart {cartTotalQty > 0 && <span>({cartTotalQty})</span>}
+        </button>
+        <button onClick={() => goTo("settings")} style={navBtnStyle("settings")}>Account</button>
         <button onClick={() => setDarkOn(!darkOn)} style={{ background: "white", color: "black", border: "none", borderRadius: 4, padding: "4px 8px", cursor: "pointer", fontSize: 11 }}>Mode</button>
       </div>
     </div>
@@ -134,7 +151,7 @@ const ProductCard = ({ prod, cartItems, wishItems, ratings, onAddCart, onWishTog
   return (
     <div 
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={() => onView(prod)}
-      style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer", transition: "0.2s", transform: hovered ? "scale(1.02)" : "none" }}
+      style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer", transition: "0.2s", transform: hovered ? "scale(1.02)" : "none", animation: "fadeIn 0.3s ease" }}
     >
       <div style={{ background: darkOn ? "#333" : peach, height: 120, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
         <Icon name={getIcon(prod.category)} size={60} color={darkOn ? "white" : orange} />
@@ -150,6 +167,7 @@ const ProductCard = ({ prod, cartItems, wishItems, ratings, onAddCart, onWishTog
         <span style={{ fontSize: 14, fontWeight: "bold", color: textCol }}>{prod.name}</span>
         <span style={{ fontSize: 12, color: mutedCol }}>{prod.category}</span>
         <StarRating rating={myRating} onRate={(s) => onRate(prod.id, s)} size={14} />
+        {inWish && <div style={{ fontSize: 11, color: orange, fontWeight: 600 }}>❤️ In your wishlist</div>}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
           <span style={{ fontSize: 16, fontWeight: "bold", color: textCol }}>₹{prod.price.toLocaleString()}</span>
           <button 
@@ -167,6 +185,14 @@ const ProductCard = ({ prod, cartItems, wishItems, ratings, onAddCart, onWishTog
 const HomePage = ({ products, cartItems, wishItems, ratings, onAddCart, onWishToggle, onRate, onView, searchVal, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach }) => {
   const [selCategory, setSelCategory] = useState("All")
   const [sortVal, setSortVal] = useState("default")
+
+  const catCount = {
+    All: products.length,
+    Electronics: products.filter(p => p.category === "Electronics").length,
+    Sports: products.filter(p => p.category === "Sports").length,
+    Kitchen: products.filter(p => p.category === "Kitchen").length
+  }
+
   let shown = products.filter(p => {
     const matchCat = selCategory === "All" || p.category === selCategory
     const matchSearch = p.name.toLowerCase().includes(searchVal.toLowerCase()) || p.brand.toLowerCase().includes(searchVal.toLowerCase())
@@ -178,6 +204,13 @@ const HomePage = ({ products, cartItems, wishItems, ratings, onAddCart, onWishTo
   else if (sortVal === "price-high") shown = [...shown].sort((a,b) => b.price - a.price)
   else if (sortVal === "rated") shown = [...shown].sort((a,b) => (ratings[b.id] || 0) - (ratings[a.id] || 0))
 
+  const getIcon = (cat) => {
+    if (cat === "Electronics") return "laptop"
+    if (cat === "Kitchen") return "kitchen"
+    if (cat === "Sports") return "sports"
+    return "package"
+  }
+
   return (
     <div>
       <div style={{ background: "linear-gradient(135deg, #FF6B35, #FFDAB9)", borderRadius: 16, padding: "28px 32px", margin: "20px 20px 0 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -186,15 +219,37 @@ const HomePage = ({ products, cartItems, wishItems, ratings, onAddCart, onWishTo
           <h1 style={{ color: "white", fontWeight: 800, fontSize: 32, margin: 0 }}>Azon Store</h1>
           <p style={{ color: "white", margin: "5px 0" }}>Great deals on Electronics, Sports & Kitchen</p>
           <div style={{ background: "white", color: orange, padding: "4px 10px", borderRadius: 20, display: "inline-block", fontSize: 12, fontWeight: "bold" }}>
-            {products.length} Products
+            {searchVal !== "" || selCategory !== "All" ? `Showing ${shown.length} of ${products.length} products` : `${products.length} Products Available`}
           </div>
         </div>
         <Icon name="package" size={90} color="white" />
       </div>
+
+      {Object.keys(ratings).length > 0 && (
+        <div style={{ margin: "0 20px", marginTop: 16, padding: "14px 16px", background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: textCol, marginBottom: 10 }}>⭐ Your Ratings</div>
+          <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 6 }}>
+            {Object.keys(ratings).map(id => {
+              const p = products.find(prod => prod.id === parseInt(id))
+              if (!p) return null
+              return (
+                <div key={id} style={{ background: darkOn ? "#333" : peach + "66", borderRadius: 20, padding: "6px 14px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                  <Icon name={getIcon(p.category)} size={18} color={orange} />
+                  <span style={{ fontSize: 13, color: textCol, fontWeight: 500, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+                  <StarRating size={11} rating={ratings[id]} />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       <div style={{ margin: "16px 20px", padding: "12px 16px", background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 12, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <span style={{ color: mutedCol, fontSize: 13 }}>Category:</span>
         {["All", "Electronics", "Sports", "Kitchen"].map(cat => (
-          <button key={cat} onClick={() => setSelCategory(cat)} style={{ padding: "5px 14px", borderRadius: 20, border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", background: selCategory === cat ? orange : (darkOn ? "#333" : "#f0f0f0"), color: selCategory === cat ? "white" : textCol }}>{cat}</button>
+          <button key={cat} onClick={() => setSelCategory(cat)} style={{ padding: "5px 14px", borderRadius: 20, border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", background: selCategory === cat ? orange : (darkOn ? "#333" : "#f0f0f0"), color: selCategory === cat ? "white" : textCol }}>
+            {cat} <span style={{ fontSize: 11, opacity: 0.75 }}>({catCount[cat]})</span>
+          </button>
         ))}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ color: mutedCol, fontSize: 13 }}>Sort by:</span>
@@ -226,7 +281,7 @@ const HomePage = ({ products, cartItems, wishItems, ratings, onAddCart, onWishTo
   )
 }
 
-const CartPage = ({ cartItems, onUpdateQty, onRemove, onClearCart, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach, setToastMsg }) => {
+const CartPage = ({ cartItems, onUpdateQty, onRemove, onClearCart, goTo, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach, setToastMsg }) => {
   const totalPrice = cartItems.reduce((sum, i) => sum + i.price * i.qty, 0)
   const totalQty = cartItems.reduce((sum, i) => sum + i.qty, 0)
   const getIcon = (cat) => {
@@ -244,6 +299,7 @@ const CartPage = ({ cartItems, onUpdateQty, onRemove, onClearCart, darkOn, cardB
           <Icon name="cart" size={60} color={mutedCol} />
           <h3 style={{ color: textCol }}>Your cart is empty</h3>
           <p style={{ color: mutedCol }}>Go add something!</p>
+          <button onClick={() => goTo("home")} style={{ background: orange, color: "white", border: "none", borderRadius: 8, padding: "10px 24px", fontWeight: 600, cursor: "pointer", marginTop: 16 }}>→ Go Shopping</button>
         </div>
       ) : (
         <>
@@ -291,7 +347,7 @@ const CartPage = ({ cartItems, onUpdateQty, onRemove, onClearCart, darkOn, cardB
   )
 }
 
-const WishPage = ({ wishItems, products, cartItems, ratings, onAddCart, onWishToggle, onRate, onView, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach }) => {
+const WishPage = ({ wishItems, products, cartItems, ratings, onAddCart, onWishToggle, onRate, onView, goTo, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach }) => {
   const wishedProds = products.filter(p => wishItems.includes(p.id))
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 20px" }}>
@@ -300,6 +356,7 @@ const WishPage = ({ wishItems, products, cartItems, ratings, onAddCart, onWishTo
         <div style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 16, padding: 60, textAlign: "center" }}>
           <Icon name="heart" size={60} color={mutedCol} />
           <h3 style={{ color: textCol }}>Nothing saved yet</h3>
+          <button onClick={() => goTo("home")} style={{ background: orange, color: "white", border: "none", borderRadius: 8, padding: "10px 24px", fontWeight: 600, cursor: "pointer", marginTop: 16 }}>→ Browse Products</button>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(215px, 1fr))", gap: 18 }}>
@@ -338,10 +395,23 @@ const SettingsPage = ({ userName, setUserName, darkOn, setDarkOn, cartItems, wis
       </div>
       <div style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 16, padding: 20, marginTop: 18 }}>
         <h4 style={{ margin: "0 0 14px 0" }}>Activity</h4>
-        <div style={{ display: "flex", gap: 20 }}>
-          <div><div style={{ fontSize: 20, fontWeight: 700 }}>{cartItems.length}</div><div style={{ fontSize: 12, color: mutedCol }}>Cart</div></div>
-          <div><div style={{ fontSize: 20, fontWeight: 700 }}>{wishItems.length}</div><div style={{ fontSize: 12, color: mutedCol }}>Wish</div></div>
-          <div><div style={{ fontSize: 20, fontWeight: 700 }}>{Object.keys(ratings).length}</div><div style={{ fontSize: 12, color: mutedCol }}>Rated</div></div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+          <div style={{ background: darkOn ? "#333" : "#f9f9f9", borderRadius: 10, padding: 16, textAlign: "center" }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: orange }}>{cartItems.reduce((s,i) => s + i.qty, 0)}</div>
+            <div style={{ fontSize: 12, color: mutedCol }}>Cart Items</div>
+          </div>
+          <div style={{ background: darkOn ? "#333" : "#f9f9f9", borderRadius: 10, padding: 16, textAlign: "center" }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: orange }}>{wishItems.length}</div>
+            <div style={{ fontSize: 12, color: mutedCol }}>Wishlisted</div>
+          </div>
+          <div style={{ background: darkOn ? "#333" : "#f9f9f9", borderRadius: 10, padding: 16, textAlign: "center" }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: orange }}>{Object.keys(ratings).length}</div>
+            <div style={{ fontSize: 12, color: mutedCol }}>Rated</div>
+          </div>
+          <div style={{ background: darkOn ? "#333" : "#f9f9f9", borderRadius: 10, padding: 16, textAlign: "center" }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: orange }}>₹{cartItems.reduce((s,i) => s + i.price * i.qty, 0).toLocaleString()}</div>
+            <div style={{ fontSize: 12, color: mutedCol }}>Cart Value</div>
+          </div>
         </div>
       </div>
     </div>
@@ -360,7 +430,7 @@ const ProductModal = ({ prod, cartItems, wishItems, ratings, onAddCart, onWishTo
   }
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: cardBg, borderRadius: 16, maxWidth: 500, width: "100%", overflow: "hidden" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: cardBg, borderRadius: 16, maxWidth: 500, width: "100%", overflow: "hidden", animation: "popIn 0.25s ease" }}>
         <div style={{ background: peach, height: 180, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon name={getIcon(prod.category)} size={100} color={orange} />
         </div>
@@ -386,12 +456,13 @@ const ProductModal = ({ prod, cartItems, wishItems, ratings, onAddCart, onWishTo
 const Toast = ({ msg }) => {
   if (!msg) return null
   return (
-    <div style={{ position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)", background: "#333", color: "white", padding: "10px 20px", borderRadius: 8, zIndex: 1000, fontSize: 14 }}>{msg}</div>
+    <div style={{ position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)", background: "#333", color: "white", padding: "10px 20px", borderRadius: 8, zIndex: 1000, fontSize: 14, animation: "slideUp 0.3s ease" }}>{msg}</div>
   )
 }
 
 export default function App() {
   const [page, setPage] = useState("home")
+  const [pageKey, setPageKey] = useState(0)
   const [cartItems, setCartItems] = useState([])
   const [wishItems, setWishItems] = useState([])
   const [ratings, setRatings] = useState({})
@@ -400,6 +471,7 @@ export default function App() {
   const [userName, setUserName] = useState("Azon User")
   const [viewProd, setViewProd] = useState(null)
   const [toastMsg, setToastMsg] = useState("")
+  const [showTop, setShowTop] = useState(false)
 
   useEffect(() => {
     const savedCart = localStorage.getItem("azon-cart")
@@ -425,6 +497,17 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [toastMsg])
 
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 300)
+    window.addEventListener("scroll", onScroll)
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  function goTo(pageName) {
+    setPage(pageName)
+    setPageKey(k => k + 1)
+  }
+
   function addToCart(prod) {
     setCartItems(prev => {
       const exists = prev.find(i => i.id === prod.id)
@@ -439,23 +522,20 @@ export default function App() {
   }
 
   function removeFromCart(id) { setCartItems(prev => prev.filter(i => i.id !== id)) }
-
   function clearCart() { setCartItems([]) }
-
   function wishToggle(id) {
     setWishItems(prev => {
       if (prev.includes(id)) { setToastMsg("Removed from wishlist"); return prev.filter(w => w !== id) }
       setToastMsg("Added to wishlist!"); return [...prev, id]
     })
   }
-
   function rateProduct(id, star) { setRatings(prev => ({...prev, [id]: star})); setToastMsg("Rating saved!") }
 
   const orange = "#FF6B35", peach = "#FFDAB9", darkBg = "#1a1a1a", darkCard = "#2a2a2a"
   const bg = darkOn ? darkBg : "#f5f5f5", cardBg = darkOn ? darkCard : "#ffffff", textCol = darkOn ? "#ffffff" : "#111111", mutedCol = darkOn ? "#aaaaaa" : "#666666", borderCol = darkOn ? "#333333" : "#e0e0e0"
 
   function renderPage() {
-    const props = { products, cartItems, wishItems, ratings, onAddCart: addToCart, onWishToggle: wishToggle, onRate: rateProduct, onView: setViewProd, searchVal, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach, setToastMsg, onUpdateQty: updateQty, onRemove: removeFromCart, onClearCart: clearCart, userName, setUserName, setCartItems, setWishItems, setRatings }
+    const props = { products, cartItems, wishItems, ratings, onAddCart: addToCart, onWishToggle: wishToggle, onRate: rateProduct, onView: setViewProd, searchVal, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach, setToastMsg, onUpdateQty: updateQty, onRemove: removeFromCart, onClearCart: clearCart, userName, setUserName, setCartItems, setWishItems, setRatings, goTo }
     if (page === "home") return <HomePage {...props} />
     if (page === "cart") return <CartPage {...props} />
     if (page === "wish") return <WishPage {...props} />
@@ -465,9 +545,36 @@ export default function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: bg, color: textCol, fontFamily: "sans-serif" }}>
-      <Navbar page={page} setPage={setPage} cartItems={cartItems} wishItems={wishItems} searchVal={searchVal} setSearchVal={setSearchVal} darkOn={darkOn} setDarkOn={setDarkOn} orange={orange} peach={peach} cardBg={cardBg} textCol={textCol} borderCol={borderCol} />
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>{renderPage()}</div>
+      <style>{`
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { 0% { transform: scale(0.92); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes loadBar { from { width: 0%; } to { width: 100%; } }
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #FF6B35; border-radius: 3px; }
+        a:hover { color: #FF6B35 !important; }
+        select option { background: inherit; }
+      `}</style>
+
+      <div key={pageKey + "bar"} style={{ position: "fixed", top: 0, left: 0, height: 3, background: orange, zIndex: 9999, animation: "loadBar 0.4s ease forwards" }} />
+
+      <Navbar page={page} goTo={goTo} cartItems={cartItems} wishItems={wishItems} searchVal={searchVal} setSearchVal={setSearchVal} darkOn={darkOn} setDarkOn={setDarkOn} orange={orange} peach={peach} cardBg={cardBg} textCol={textCol} borderCol={borderCol} />
+      
+      <div key={pageKey} style={{ maxWidth: 1000, margin: "0 auto", animation: "fadeIn 0.25s ease" }}>
+        {renderPage()}
+      </div>
+
       {viewProd && <ProductModal prod={viewProd} cartItems={cartItems} wishItems={wishItems} ratings={ratings} onAddCart={addToCart} onWishToggle={wishToggle} onRate={rateProduct} onClose={() => setViewProd(null)} darkOn={darkOn} cardBg={cardBg} textCol={textCol} mutedCol={mutedCol} borderCol={borderCol} orange={orange} peach={peach} />}
+      
+      {showTop && (
+        <button
+          onClick={() => window.scrollTo({top: 0, behavior: "smooth"})}
+          style={{ position: "fixed", bottom: 80, right: 24, zIndex: 999, background: orange, color: "white", border: "none", borderRadius: "50%", width: 44, height: 44, fontSize: 20, cursor: "pointer", boxShadow: "0 4px 12px rgba(255,107,53,0.4)", animation: "popIn 0.2s ease" }}
+        >↑</button>
+      )}
+
       <Toast msg={toastMsg} />
       <Footer darkOn={darkOn} cardBg={cardBg} textCol={textCol} mutedCol={mutedCol} borderCol={borderCol} orange={orange} />
     </div>
