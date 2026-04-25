@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import "./App.css"
 
 const products = [
   { id: 1, name: "Premium Smartphone", brand: "Apple", category: "Electronics", price: 80000, desc: "A powerful smartphone with a clear display." },
@@ -46,23 +45,11 @@ const Icon = ({ name, size = 18, color = "currentColor" }) => {
   )
 }
 
-const Navbar = ({ page, goTo, cartItems, wishItems, searchVal, setSearchVal, darkOn, setDarkOn, orange, peach, cardBg, textCol, borderCol }) => {
-  const cartTotalQty = cartItems.reduce((s, i) => s + i.qty, 0)
-  
-  const navBtnStyle = (btnPage) => ({
-    background: "none",
-    border: "none",
-    color: "white",
-    cursor: "pointer",
-    fontSize: 13,
-    padding: "4px 0",
-    borderBottom: page === btnPage ? "2px solid white" : "2px solid transparent",
-    transition: "border-bottom 0.2s"
-  })
-
+const Navbar = ({ page, setPage, cartItems, wishItems, searchVal, setSearchVal, darkOn, setDarkOn, orange, peach }) => {
+  const cartCount = cartItems.reduce((s, i) => s + i.qty, 0)
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 100, background: orange, height: "60px", display: "flex", alignItems: "center", padding: "0 24px", gap: 16 }}>
-      <span onClick={() => goTo("home")} style={{ fontSize: 24, fontWeight: "bold", color: "white", cursor: "pointer" }}>
+      <span onClick={() => setPage("home")} style={{ fontSize: 24, fontWeight: "bold", color: "white", cursor: "pointer" }}>
         <span style={{ color: peach }}>Az</span>on
       </span>
       <div style={{ flex: 1, display: "flex" }}>
@@ -74,23 +61,19 @@ const Navbar = ({ page, goTo, cartItems, wishItems, searchVal, setSearchVal, dar
         <button style={{ background: peach, border: "none", borderRadius: "0 4px 4px 0", padding: "0 10px", cursor: "pointer", fontWeight: "bold" }}>Search</button>
       </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <button onClick={() => goTo("home")} style={navBtnStyle("home")}>Home</button>
-        <button onClick={() => goTo("wish")} style={navBtnStyle("wish")}>
-          Wishlist {wishItems.length > 0 && <span>({wishItems.length})</span>}
-        </button>
-        <button onClick={() => goTo("cart")} style={navBtnStyle("cart")}>
-          Cart {cartTotalQty > 0 && <span>({cartTotalQty})</span>}
-        </button>
-        <button onClick={() => goTo("settings")} style={navBtnStyle("settings")}>Account</button>
-        <button onClick={() => setDarkOn(!darkOn)} style={{ background: "white", color: "black", border: "none", borderRadius: 4, padding: "4px 8px", cursor: "pointer", fontSize: 11 }}>Mode</button>
+        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "white", cursor: "pointer", fontSize: 13 }}>Home</button>
+        <button onClick={() => setPage("wish")} style={{ background: "none", border: "none", color: "white", cursor: "pointer", fontSize: 13 }}>Wishlist ({wishItems.length})</button>
+        <button onClick={() => setPage("cart")} style={{ background: "none", border: "none", color: "white", cursor: "pointer", fontSize: 13 }}>Cart ({cartCount})</button>
+        <button onClick={() => setPage("settings")} style={{ background: "none", border: "none", color: "white", cursor: "pointer", fontSize: 13 }}>Account</button>
+        <button onClick={() => setDarkOn(!darkOn)} style={{ background: "white", color: "black", border: "none", borderRadius: 4, padding: "4px 8px", cursor: "pointer", fontSize: 11 }}>{darkOn ? "Light" : "Dark"}</button>
       </div>
     </div>
   )
 }
 
-const Footer = ({ darkOn, cardBg, textCol, mutedCol, borderCol, orange }) => (
+const Footer = ({ cardBg, textCol, mutedCol, borderCol, orange }) => (
   <div style={{ background: cardBg, borderTop: `1px solid ${borderCol}`, padding: "30px 20px", marginTop: 40 }}>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 20 }}>
       <div>
         <h4 style={{ color: orange, marginBottom: 10 }}>Azon</h4>
         <a href="#" style={{ color: mutedCol, textDecoration: "none", fontSize: 12, display: "block", marginBottom: 5 }}>About</a>
@@ -100,16 +83,6 @@ const Footer = ({ darkOn, cardBg, textCol, mutedCol, borderCol, orange }) => (
         <h4 style={{ color: textCol, marginBottom: 10 }}>Help</h4>
         <a href="#" style={{ color: mutedCol, textDecoration: "none", fontSize: 12, display: "block", marginBottom: 5 }}>Shipping</a>
         <a href="#" style={{ color: mutedCol, textDecoration: "none", fontSize: 12, display: "block", marginBottom: 5 }}>Returns</a>
-      </div>
-      <div>
-        <h4 style={{ color: textCol, marginBottom: 10 }}>Legal</h4>
-        <a href="#" style={{ color: mutedCol, textDecoration: "none", fontSize: 12, display: "block", marginBottom: 5 }}>Privacy</a>
-        <a href="#" style={{ color: mutedCol, textDecoration: "none", fontSize: 12, display: "block", marginBottom: 5 }}>Terms</a>
-      </div>
-      <div>
-        <h4 style={{ color: textCol, marginBottom: 10 }}>Social</h4>
-        <a href="#" style={{ color: mutedCol, textDecoration: "none", fontSize: 12, display: "block", marginBottom: 5 }}>Facebook</a>
-        <a href="#" style={{ color: mutedCol, textDecoration: "none", fontSize: 12, display: "block", marginBottom: 5 }}>Twitter</a>
       </div>
     </div>
     <div style={{ borderTop: `1px solid ${borderCol}`, paddingTop: 15, marginTop: 20, textAlign: "center", color: mutedCol, fontSize: 12 }}>
@@ -151,7 +124,7 @@ const ProductCard = ({ prod, cartItems, wishItems, ratings, onAddCart, onWishTog
   return (
     <div 
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={() => onView(prod)}
-      style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer", transition: "0.2s", transform: hovered ? "scale(1.02)" : "none", animation: "fadeIn 0.3s ease" }}
+      style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer", transition: "0.2s", transform: hovered ? "scale(1.02)" : "none" }}
     >
       <div style={{ background: darkOn ? "#333" : peach, height: 120, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
         <Icon name={getIcon(prod.category)} size={60} color={darkOn ? "white" : orange} />
@@ -165,9 +138,7 @@ const ProductCard = ({ prod, cartItems, wishItems, ratings, onAddCart, onWishTog
       <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 4 }}>
         <span style={{ fontSize: 10, fontWeight: "bold", color: orange }}>{prod.brand}</span>
         <span style={{ fontSize: 14, fontWeight: "bold", color: textCol }}>{prod.name}</span>
-        <span style={{ fontSize: 12, color: mutedCol }}>{prod.category}</span>
         <StarRating rating={myRating} onRate={(s) => onRate(prod.id, s)} size={14} />
-        {inWish && <div style={{ fontSize: 11, color: orange, fontWeight: 600 }}>❤️ In your wishlist</div>}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
           <span style={{ fontSize: 16, fontWeight: "bold", color: textCol }}>₹{prod.price.toLocaleString()}</span>
           <button 
@@ -182,164 +153,59 @@ const ProductCard = ({ prod, cartItems, wishItems, ratings, onAddCart, onWishTog
   )
 }
 
-const HomePage = ({ products, cartItems, wishItems, ratings, onAddCart, onWishToggle, onRate, onView, searchVal, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach }) => {
+const HomePage = (props) => {
   const [selCategory, setSelCategory] = useState("All")
   const [sortVal, setSortVal] = useState("default")
-
-  const catCount = {
-    All: products.length,
-    Electronics: products.filter(p => p.category === "Electronics").length,
-    Sports: products.filter(p => p.category === "Sports").length,
-    Kitchen: products.filter(p => p.category === "Kitchen").length
-  }
-
-  let shown = products.filter(p => {
+  let shown = props.products.filter(p => {
     const matchCat = selCategory === "All" || p.category === selCategory
-    const matchSearch = p.name.toLowerCase().includes(searchVal.toLowerCase()) || p.brand.toLowerCase().includes(searchVal.toLowerCase())
+    const matchSearch = p.name.toLowerCase().includes(props.searchVal.toLowerCase()) || p.brand.toLowerCase().includes(props.searchVal.toLowerCase())
     return matchCat && matchSearch
   })
-  if (sortVal === "name-az") shown = [...shown].sort((a,b) => a.name.localeCompare(b.name))
-  else if (sortVal === "name-za") shown = [...shown].sort((a,b) => b.name.localeCompare(a.name))
-  else if (sortVal === "price-low") shown = [...shown].sort((a,b) => a.price - b.price)
-  else if (sortVal === "price-high") shown = [...shown].sort((a,b) => b.price - a.price)
-  else if (sortVal === "rated") shown = [...shown].sort((a,b) => (ratings[b.id] || 0) - (ratings[a.id] || 0))
 
-  const getIcon = (cat) => {
-    if (cat === "Electronics") return "laptop"
-    if (cat === "Kitchen") return "kitchen"
-    if (cat === "Sports") return "sports"
-    return "package"
-  }
+  if (sortVal === "price-low") shown = [...shown].sort((a,b) => a.price - b.price)
+  else if (sortVal === "price-high") shown = [...shown].sort((a,b) => b.price - a.price)
 
   return (
     <div>
-      <div style={{ background: "linear-gradient(135deg, #FF6B35, #FFDAB9)", borderRadius: 16, padding: "28px 32px", margin: "20px 20px 0 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: "linear-gradient(135deg, #FF6B35, #FFDAB9)", borderRadius: 16, padding: "28px 32px", margin: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ color: "white", opacity: 0.8, fontSize: 12 }}>WELCOME TO</div>
           <h1 style={{ color: "white", fontWeight: 800, fontSize: 32, margin: 0 }}>Azon Store</h1>
-          <p style={{ color: "white", margin: "5px 0" }}>Great deals on Electronics, Sports & Kitchen</p>
-          <div style={{ background: "white", color: orange, padding: "4px 10px", borderRadius: 20, display: "inline-block", fontSize: 12, fontWeight: "bold" }}>
-            {searchVal !== "" || selCategory !== "All" ? `Showing ${shown.length} of ${products.length} products` : `${products.length} Products Available`}
-          </div>
+          <p style={{ color: "white", margin: "5px 0" }}>Quality products at the best prices.</p>
         </div>
-        <Icon name="package" size={90} color="white" />
+        <Icon name="package" size={70} color="white" />
       </div>
-
-      {Object.keys(ratings).length > 0 && (
-        <div style={{ margin: "0 20px", marginTop: 16, padding: "14px 16px", background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 12 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: textCol, marginBottom: 10 }}>⭐ Your Ratings</div>
-          <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 6 }}>
-            {Object.keys(ratings).map(id => {
-              const p = products.find(prod => prod.id === parseInt(id))
-              if (!p) return null
-              return (
-                <div key={id} style={{ background: darkOn ? "#333" : peach + "66", borderRadius: 20, padding: "6px 14px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                  <Icon name={getIcon(p.category)} size={18} color={orange} />
-                  <span style={{ fontSize: 13, color: textCol, fontWeight: 500, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
-                  <StarRating size={11} rating={ratings[id]} />
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      <div style={{ margin: "16px 20px", padding: "12px 16px", background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 12, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-        <span style={{ color: mutedCol, fontSize: 13 }}>Category:</span>
+      <div style={{ margin: "16px 20px", display: "flex", gap: 10, flexWrap: "wrap" }}>
         {["All", "Electronics", "Sports", "Kitchen"].map(cat => (
-          <button key={cat} onClick={() => setSelCategory(cat)} style={{ padding: "5px 14px", borderRadius: 20, border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", background: selCategory === cat ? orange : (darkOn ? "#333" : "#f0f0f0"), color: selCategory === cat ? "white" : textCol }}>
-            {cat} <span style={{ fontSize: 11, opacity: 0.75 }}>({catCount[cat]})</span>
-          </button>
+          <button key={cat} onClick={() => setSelCategory(cat)} style={{ padding: "8px 16px", borderRadius: 20, border: "none", cursor: "pointer", background: selCategory === cat ? props.orange : props.cardBg, color: selCategory === cat ? "white" : props.textCol, border: `1px solid ${props.borderCol}` }}>{cat}</button>
         ))}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ color: mutedCol, fontSize: 13 }}>Sort by:</span>
-          <select value={sortVal} onChange={(e) => setSortVal(e.target.value)} style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${borderCol}`, background: cardBg, color: textCol, fontSize: 13 }}>
-            <option value="default">Default</option>
-            <option value="name-az">Name A-Z</option>
-            <option value="name-za">Name Z-A</option>
-            <option value="price-low">Price ↑</option>
-            <option value="price-high">Price ↓</option>
-            <option value="rated">My Ratings</option>
-          </select>
-        </div>
       </div>
-      <div style={{ margin: "8px 20px 12px 20px", fontSize: 13, color: mutedCol }}>Showing {shown.length} products</div>
-      {shown.length === 0 ? (
-        <div style={{ padding: 60, textAlign: "center" }}>
-          <Icon name="search" size={60} color={mutedCol} />
-          <h3 style={{ color: textCol }}>No products found</h3>
-          <p style={{ color: mutedCol }}>Try a different search or category</p>
-        </div>
-      ) : (
-        <div style={{ margin: "0 20px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(215px, 1fr))", gap: 18 }}>
-          {shown.map(p => (
-            <ProductCard key={p.id} prod={p} cartItems={cartItems} wishItems={wishItems} ratings={ratings} onAddCart={onAddCart} onWishToggle={onWishToggle} onRate={onRate} onView={onView} darkOn={darkOn} cardBg={cardBg} textCol={textCol} mutedCol={mutedCol} borderCol={borderCol} orange={orange} peach={peach} />
-          ))}
-        </div>
-      )}
+      <div style={{ margin: "0 20px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 20 }}>
+        {shown.map(p => <ProductCard key={p.id} prod={p} {...props} />)}
+      </div>
     </div>
   )
 }
 
-const CartPage = ({ cartItems, onUpdateQty, onRemove, onClearCart, goTo, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach, setToastMsg }) => {
+const CartPage = ({ cartItems, onUpdateQty, onRemove, onClearCart, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach, setToastMsg }) => {
   const totalPrice = cartItems.reduce((sum, i) => sum + i.price * i.qty, 0)
-  const totalQty = cartItems.reduce((sum, i) => sum + i.qty, 0)
-  const getIcon = (cat) => {
-    if (cat === "Electronics") return "laptop"
-    if (cat === "Kitchen") return "kitchen"
-    if (cat === "Sports") return "sports"
-    return "package"
-  }
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: "24px 20px" }}>
       <h2 style={{ color: textCol }}>Your Cart</h2>
-      <p style={{ color: mutedCol, fontSize: 14 }}>{totalQty} item(s)</p>
-      {cartItems.length === 0 ? (
-        <div style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 16, padding: 60, textAlign: "center" }}>
-          <Icon name="cart" size={60} color={mutedCol} />
-          <h3 style={{ color: textCol }}>Your cart is empty</h3>
-          <p style={{ color: mutedCol }}>Go add something!</p>
-          <button onClick={() => goTo("home")} style={{ background: orange, color: "white", border: "none", borderRadius: 8, padding: "10px 24px", fontWeight: 600, cursor: "pointer", marginTop: 16 }}>→ Go Shopping</button>
-        </div>
-      ) : (
+      {cartItems.length === 0 ? <p>Cart is empty</p> : (
         <>
           {cartItems.map(item => (
-            <div key={item.id} style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
-              <div style={{ background: darkOn ? "#333" : peach + "44", borderRadius: 8, width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Icon name={getIcon(item.category)} size={40} color={orange} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, color: textCol }}>{item.name}</div>
-                <div style={{ fontSize: 13, color: mutedCol }}>{item.brand} • {item.category}</div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <button onClick={() => onUpdateQty(item.id, -1)} style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${borderCol}`, background: cardBg, cursor: "pointer", color: textCol }}>-</button>
-                <span style={{ fontWeight: 700, minWidth: 20, textAlign: "center" }}>{item.qty}</span>
-                <button onClick={() => onUpdateQty(item.id, 1)} style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${borderCol}`, background: cardBg, cursor: "pointer", color: textCol }}>+</button>
-              </div>
-              <div style={{ fontWeight: 700, fontSize: 15, minWidth: 80, textAlign: "right" }}>₹{(item.price * item.qty).toLocaleString()}</div>
-              <button onClick={() => onRemove(item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444" }}>
-                <Icon name="trash" size={20} />
-              </button>
+            <div key={item.id} style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 12, padding: 15, display: "flex", alignItems: "center", marginBottom: 10 }}>
+              <div style={{ flex: 1, color: textCol }}><b>{item.name}</b> (x{item.qty})</div>
+              <div style={{ marginRight: 20, fontWeight: "bold" }}>₹{(item.price * item.qty).toLocaleString()}</div>
+              <button onClick={() => onUpdateQty(item.id, 1)} style={{ padding: "5px 10px", marginRight: 5 }}>+</button>
+              <button onClick={() => onUpdateQty(item.id, -1)} style={{ padding: "5px 10px", marginRight: 10 }}>-</button>
+              <button onClick={() => onRemove(item.id)} style={{ color: "red", background: "none", border: "none", cursor: "pointer" }}><Icon name="trash" /></button>
             </div>
           ))}
-          <div style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 16, padding: 22, marginTop: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 14 }}>
-              <span style={{ color: mutedCol }}>Subtotal</span>
-              <span style={{ color: textCol }}>₹{totalPrice.toLocaleString()}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, fontSize: 14 }}>
-              <span style={{ color: mutedCol }}>Delivery</span>
-              <span style={{ color: "#4CAF50" }}>FREE</span>
-            </div>
-            <div style={{ borderTop: `1px solid ${borderCol}`, paddingTop: 12, marginBottom: 16, display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 18, fontWeight: 700 }}>Total</span>
-              <span style={{ fontSize: 18, fontWeight: 700 }}>₹{totalPrice.toLocaleString()}</span>
-            </div>
-            <div style={{ display: "flex", gap: 12 }}>
-              <button onClick={onClearCart} style={{ background: "#ef4444", color: "white", border: "none", borderRadius: 8, padding: "10px", fontWeight: 600, flex: 1, cursor: "pointer" }}>Clear</button>
-              <button onClick={() => setToastMsg("Order placed! 🎉")} style={{ background: orange, color: "white", border: "none", borderRadius: 8, padding: "10px", fontWeight: 600, flex: 2, cursor: "pointer" }}>Checkout</button>
-            </div>
+          <div style={{ marginTop: 20, textAlign: "right" }}>
+            <h3>Total: ₹{totalPrice.toLocaleString()}</h3>
+            <button onClick={onClearCart} style={{ padding: "10px 20px", marginRight: 10 }}>Clear Cart</button>
+            <button onClick={() => setToastMsg("Order Placed!")} style={{ padding: "10px 20px", background: orange, color: "white", border: "none" }}>Checkout</button>
           </div>
         </>
       )}
@@ -347,105 +213,48 @@ const CartPage = ({ cartItems, onUpdateQty, onRemove, onClearCart, goTo, darkOn,
   )
 }
 
-const WishPage = ({ wishItems, products, cartItems, ratings, onAddCart, onWishToggle, onRate, onView, goTo, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach }) => {
-  const wishedProds = products.filter(p => wishItems.includes(p.id))
+const WishPage = (props) => {
+  const wishedProds = props.products.filter(p => props.wishItems.includes(p.id))
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 20px" }}>
-      <h2 style={{ color: textCol }}>Your Wishlist</h2>
-      {wishedProds.length === 0 ? (
-        <div style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 16, padding: 60, textAlign: "center" }}>
-          <Icon name="heart" size={60} color={mutedCol} />
-          <h3 style={{ color: textCol }}>Nothing saved yet</h3>
-          <button onClick={() => goTo("home")} style={{ background: orange, color: "white", border: "none", borderRadius: 8, padding: "10px 24px", fontWeight: 600, cursor: "pointer", marginTop: 16 }}>→ Browse Products</button>
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(215px, 1fr))", gap: 18 }}>
-          {wishedProds.map(p => (
-            <ProductCard key={p.id} prod={p} cartItems={cartItems} wishItems={wishItems} ratings={ratings} onAddCart={onAddCart} onWishToggle={onWishToggle} onRate={onRate} onView={onView} darkOn={darkOn} cardBg={cardBg} textCol={textCol} mutedCol={mutedCol} borderCol={borderCol} orange={orange} peach={peach} />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-const SettingsPage = ({ userName, setUserName, darkOn, setDarkOn, cartItems, wishItems, ratings, setCartItems, setWishItems, setRatings, cardBg, textCol, mutedCol, borderCol, orange, peach }) => {
-  const [editOn, setEditOn] = useState(false)
-  const [tempName, setTempName] = useState(userName)
-  return (
-    <div style={{ maxWidth: 680, margin: "0 auto", padding: "24px 20px" }}>
-      <h2 style={{ color: textCol }}>Account Settings</h2>
-      <div style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 16, padding: 24, marginBottom: 18 }}>
-        <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 16 }}>
-          <div style={{ width: 60, height: 60, borderRadius: "50%", background: orange, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700, color: "white" }}>{userName.charAt(0)}</div>
-          <div><div style={{ fontSize: 18, fontWeight: 700 }}>{userName}</div><div style={{ fontSize: 13, color: mutedCol }}>Azon Member</div></div>
-        </div>
-        {!editOn ? (
-          <button onClick={() => setEditOn(true)} style={{ border: `1px solid ${borderCol}`, background: cardBg, padding: "7px 16px", borderRadius: 8, cursor: "pointer", fontSize: 13, color: textCol }}>Edit Name</button>
-        ) : (
-          <div style={{ display: "flex", gap: 8 }}>
-            <input value={tempName} onChange={e => setTempName(e.target.value)} style={{ flex: 1, padding: "8px", borderRadius: 8, border: `1px solid ${orange}`, background: cardBg, color: textCol }} />
-            <button onClick={() => { setUserName(tempName); setEditOn(false); }} style={{ background: orange, color: "white", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer" }}>Save</button>
-          </div>
-        )}
-      </div>
-      <div style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 16, padding: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span>Dark Mode</span>
-        <button onClick={() => setDarkOn(!darkOn)} style={{ background: darkOn ? orange : "#ddd", border: "none", borderRadius: 20, padding: "8px 20px", cursor: "pointer" }}>{darkOn ? "ON" : "OFF"}</button>
-      </div>
-      <div style={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: 16, padding: 20, marginTop: 18 }}>
-        <h4 style={{ margin: "0 0 14px 0" }}>Activity</h4>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-          <div style={{ background: darkOn ? "#333" : "#f9f9f9", borderRadius: 10, padding: 16, textAlign: "center" }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: orange }}>{cartItems.reduce((s,i) => s + i.qty, 0)}</div>
-            <div style={{ fontSize: 12, color: mutedCol }}>Cart Items</div>
-          </div>
-          <div style={{ background: darkOn ? "#333" : "#f9f9f9", borderRadius: 10, padding: 16, textAlign: "center" }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: orange }}>{wishItems.length}</div>
-            <div style={{ fontSize: 12, color: mutedCol }}>Wishlisted</div>
-          </div>
-          <div style={{ background: darkOn ? "#333" : "#f9f9f9", borderRadius: 10, padding: 16, textAlign: "center" }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: orange }}>{Object.keys(ratings).length}</div>
-            <div style={{ fontSize: 12, color: mutedCol }}>Rated</div>
-          </div>
-          <div style={{ background: darkOn ? "#333" : "#f9f9f9", borderRadius: 10, padding: 16, textAlign: "center" }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: orange }}>₹{cartItems.reduce((s,i) => s + i.price * i.qty, 0).toLocaleString()}</div>
-            <div style={{ fontSize: 12, color: mutedCol }}>Cart Value</div>
-          </div>
-        </div>
+    <div style={{ padding: 20 }}>
+      <h2 style={{ color: props.textCol }}>Wishlist</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 20 }}>
+        {wishedProds.map(p => <ProductCard key={p.id} prod={p} {...props} />)}
       </div>
     </div>
   )
 }
 
-const ProductModal = ({ prod, cartItems, wishItems, ratings, onAddCart, onWishToggle, onRate, onClose, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach }) => {
-  const inCart = cartItems.some(i => i.id === prod.id)
+const SettingsPage = ({ userName, setUserName, darkOn, setDarkOn, cardBg, textCol, borderCol, orange }) => (
+  <div style={{ padding: 40, maxWidth: 500, margin: "0 auto" }}>
+    <h2 style={{ color: textCol }}>Settings</h2>
+    <div style={{ background: cardBg, padding: 20, border: `1px solid ${borderCol}`, borderRadius: 10 }}>
+      <label style={{ display: "block", marginBottom: 10 }}>User Name:</label>
+      <input value={userName} onChange={(e) => setUserName(e.target.value)} style={{ width: "100%", padding: 8, marginBottom: 20 }} />
+      <button onClick={() => setDarkOn(!darkOn)} style={{ width: "100%", padding: 10, background: orange, color: "white", border: "none", cursor: "pointer" }}>
+        Toggle {darkOn ? "Light" : "Dark"} Mode
+      </button>
+    </div>
+  </div>
+)
+
+const ProductModal = ({ prod, cartItems, wishItems, ratings, onAddCart, onWishToggle, onRate, onClose, cardBg, textCol, mutedCol, borderCol, orange, peach }) => {
   const inWish = wishItems.includes(prod.id)
-  const myRating = ratings[prod.id] || 0
-  const getIcon = (cat) => {
-    if (cat === "Electronics") return "laptop"
-    if (cat === "Kitchen") return "kitchen"
-    if (cat === "Sports") return "sports"
-    return "package"
-  }
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: cardBg, borderRadius: 16, maxWidth: 500, width: "100%", overflow: "hidden", animation: "popIn 0.25s ease" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: cardBg, borderRadius: 16, maxWidth: 500, width: "100%", overflow: "hidden" }}>
         <div style={{ background: peach, height: 180, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Icon name={getIcon(prod.category)} size={100} color={orange} />
+          <Icon name="package" size={100} color={orange} />
         </div>
         <div style={{ padding: 24 }}>
-          <div style={{ color: orange, fontWeight: "bold", fontSize: 11 }}>{prod.brand}</div>
-          <h2 style={{ margin: "4px 0 8px 0" }}>{prod.name}</h2>
-          <p style={{ color: mutedCol, fontSize: 14, lineHeight: 1.6 }}>{prod.desc}</p>
-          <StarRating rating={myRating} onRate={(s) => onRate(prod.id, s)} size={22} />
-          <div style={{ fontSize: 24, fontWeight: 700, margin: "16px 0" }}>₹{prod.price.toLocaleString()}</div>
+          <h2 style={{ color: textCol }}>{prod.name}</h2>
+          <p style={{ color: mutedCol }}>{prod.desc}</p>
+          <StarRating rating={ratings[prod.id] || 0} onRate={(s) => onRate(prod.id, s)} size={22} />
+          <div style={{ fontSize: 24, fontWeight: 700, margin: "16px 0", color: textCol }}>₹{prod.price.toLocaleString()}</div>
           <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => onAddCart(prod)} style={{ flex: 1, background: orange, color: "white", border: "none", borderRadius: 8, padding: "12px", fontWeight: "bold", cursor: "pointer" }}>{inCart ? "Add More" : "Add to Cart"}</button>
-            <button onClick={() => onWishToggle(prod.id)} style={{ width: 44, background: "none", border: `1px solid ${borderCol}`, borderRadius: 8, cursor: "pointer" }}>
-              <Icon name="heart" size={20} color={inWish ? orange : "#ccc"} />
-            </button>
-            <button onClick={onClose} style={{ width: 44, background: "none", border: `1px solid ${borderCol}`, borderRadius: 8, cursor: "pointer" }}>✕</button>
+            <button onClick={() => onAddCart(prod)} style={{ flex: 1, background: orange, color: "white", border: "none", padding: "12px", cursor: "pointer" }}>Add to Cart</button>
+            <button onClick={() => onWishToggle(prod.id)} style={{ padding: 10 }}><Icon name="heart" color={inWish ? orange : "#ccc"} /></button>
+            <button onClick={onClose} style={{ padding: 10 }}>Close</button>
           </div>
         </div>
       </div>
@@ -456,127 +265,84 @@ const ProductModal = ({ prod, cartItems, wishItems, ratings, onAddCart, onWishTo
 const Toast = ({ msg }) => {
   if (!msg) return null
   return (
-    <div style={{ position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)", background: "#333", color: "white", padding: "10px 20px", borderRadius: 8, zIndex: 1000, fontSize: 14, animation: "slideUp 0.3s ease" }}>{msg}</div>
+    <div style={{ position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)", background: "#333", color: "white", padding: "10px 20px", borderRadius: 8, zIndex: 1000 }}>{msg}</div>
   )
 }
 
 export default function App() {
+  // CORRECTED: State initialization functions check localStorage immediately
+  const [cartItems, setCartItems] = useState(() => {
+    const saved = localStorage.getItem("azon-cart")
+    return saved ? JSON.parse(saved) : []
+  })
+  const [wishItems, setWishItems] = useState(() => {
+    const saved = localStorage.getItem("azon-wish")
+    return saved ? JSON.parse(saved) : []
+  })
+  const [ratings, setRatings] = useState(() => {
+    const saved = localStorage.getItem("azon-ratings")
+    return saved ? JSON.parse(saved) : {}
+  })
+  const [darkOn, setDarkOn] = useState(() => {
+    const saved = localStorage.getItem("azon-dark")
+    return saved ? JSON.parse(saved) : false
+  })
+  const [userName, setUserName] = useState(() => {
+    const saved = localStorage.getItem("azon-username")
+    return saved ? JSON.parse(saved) : "Azon User"
+  })
+
   const [page, setPage] = useState("home")
-  const [pageKey, setPageKey] = useState(0)
-  const [cartItems, setCartItems] = useState([])
-  const [wishItems, setWishItems] = useState([])
-  const [ratings, setRatings] = useState({})
-  const [darkOn, setDarkOn] = useState(false)
   const [searchVal, setSearchVal] = useState("")
-  const [userName, setUserName] = useState("Azon User")
   const [viewProd, setViewProd] = useState(null)
   const [toastMsg, setToastMsg] = useState("")
-  const [showTop, setShowTop] = useState(false)
 
-  useEffect(() => {
-    const savedCart = localStorage.getItem("azon-cart")
-    const savedWish = localStorage.getItem("azon-wish")
-    const savedRatings = localStorage.getItem("azon-ratings")
-    const savedDark = localStorage.getItem("azon-dark")
-    const savedName = localStorage.getItem("azon-username")
-    if (savedCart) setCartItems(JSON.parse(savedCart))
-    if (savedWish) setWishItems(JSON.parse(savedWish))
-    if (savedRatings) setRatings(JSON.parse(savedRatings))
-    if (savedDark) setDarkOn(JSON.parse(savedDark))
-    if (savedName) setUserName(savedName)
-  }, [])
-
+  // Update localStorage when state changes
   useEffect(() => { localStorage.setItem("azon-cart", JSON.stringify(cartItems)) }, [cartItems])
   useEffect(() => { localStorage.setItem("azon-wish", JSON.stringify(wishItems)) }, [wishItems])
   useEffect(() => { localStorage.setItem("azon-ratings", JSON.stringify(ratings)) }, [ratings])
   useEffect(() => { localStorage.setItem("azon-dark", JSON.stringify(darkOn)) }, [darkOn])
+  useEffect(() => { localStorage.setItem("azon-username", JSON.stringify(userName)) }, [userName])
 
   useEffect(() => {
-    if (toastMsg === "") return
-    const timer = setTimeout(() => setToastMsg(""), 2500)
-    return () => clearTimeout(timer)
+    if (toastMsg) {
+      const timer = setTimeout(() => setToastMsg(""), 2000)
+      return () => clearTimeout(timer)
+    }
   }, [toastMsg])
 
-  useEffect(() => {
-    const onScroll = () => setShowTop(window.scrollY > 300)
-    window.addEventListener("scroll", onScroll)
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
-
-  function goTo(pageName) {
-    setPage(pageName)
-    setPageKey(k => k + 1)
-  }
-
-  function addToCart(prod) {
+  const addToCart = (prod) => {
     setCartItems(prev => {
       const exists = prev.find(i => i.id === prod.id)
-      if (exists) { return prev.map(i => i.id === prod.id ? {...i, qty: i.qty + 1} : i) }
+      if (exists) return prev.map(i => i.id === prod.id ? {...i, qty: i.qty + 1} : i)
       return [...prev, {...prod, qty: 1}]
     })
     setToastMsg("Added to cart!")
   }
 
-  function updateQty(id, delta) {
-    setCartItems(prev => prev.map(i => i.id === id ? {...i, qty: i.qty + delta} : i).filter(i => i.qty > 0))
-  }
+  const updateQty = (id, delta) => setCartItems(prev => prev.map(i => i.id === id ? {...i, qty: i.qty + delta} : i).filter(i => i.qty > 0))
+  const removeFromCart = (id) => setCartItems(prev => prev.filter(i => i.id !== id))
+  const clearCart = () => setCartItems([])
+  const wishToggle = (id) => setWishItems(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  const rateProduct = (id, star) => setRatings(prev => ({...prev, [id]: star}))
 
-  function removeFromCart(id) { setCartItems(prev => prev.filter(i => i.id !== id)) }
-  function clearCart() { setCartItems([]) }
-  function wishToggle(id) {
-    setWishItems(prev => {
-      if (prev.includes(id)) { setToastMsg("Removed from wishlist"); return prev.filter(w => w !== id) }
-      setToastMsg("Added to wishlist!"); return [...prev, id]
-    })
-  }
-  function rateProduct(id, star) { setRatings(prev => ({...prev, [id]: star})); setToastMsg("Rating saved!") }
+  const orange = "#FF6B35", peach = "#FFDAB9"
+  const bg = darkOn ? "#1a1a1a" : "#f5f5f5", cardBg = darkOn ? "#2a2a2a" : "#ffffff", textCol = darkOn ? "#ffffff" : "#111111", mutedCol = darkOn ? "#aaaaaa" : "#666666", borderCol = darkOn ? "#333333" : "#e0e0e0"
 
-  const orange = "#FF6B35", peach = "#FFDAB9", darkBg = "#1a1a1a", darkCard = "#2a2a2a"
-  const bg = darkOn ? darkBg : "#f5f5f5", cardBg = darkOn ? darkCard : "#ffffff", textCol = darkOn ? "#ffffff" : "#111111", mutedCol = darkOn ? "#aaaaaa" : "#666666", borderCol = darkOn ? "#333333" : "#e0e0e0"
-
-  function renderPage() {
-    const props = { products, cartItems, wishItems, ratings, onAddCart: addToCart, onWishToggle: wishToggle, onRate: rateProduct, onView: setViewProd, searchVal, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach, setToastMsg, onUpdateQty: updateQty, onRemove: removeFromCart, onClearCart: clearCart, userName, setUserName, setCartItems, setWishItems, setRatings, goTo }
-    if (page === "home") return <HomePage {...props} />
-    if (page === "cart") return <CartPage {...props} />
-    if (page === "wish") return <WishPage {...props} />
-    if (page === "settings") return <SettingsPage {...props} />
-    return null
-  }
+  const props = { products, cartItems, wishItems, ratings, onAddCart: addToCart, onWishToggle: wishToggle, onRate: rateProduct, onView: setViewProd, searchVal, darkOn, cardBg, textCol, mutedCol, borderCol, orange, peach, setToastMsg, onUpdateQty: updateQty, onRemove: removeFromCart, onClearCart: clearCart, userName, setUserName }
 
   return (
     <div style={{ minHeight: "100vh", background: bg, color: textCol, fontFamily: "sans-serif" }}>
-      <style>{`
-        @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes popIn { 0% { transform: scale(0.92); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes loadBar { from { width: 0%; } to { width: 100%; } }
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #FF6B35; border-radius: 3px; }
-        a:hover { color: #FF6B35 !important; }
-        select option { background: inherit; }
-      `}</style>
-
-      <div key={pageKey + "bar"} style={{ position: "fixed", top: 0, left: 0, height: 3, background: orange, zIndex: 9999, animation: "loadBar 0.4s ease forwards" }} />
-
-      <Navbar page={page} goTo={goTo} cartItems={cartItems} wishItems={wishItems} searchVal={searchVal} setSearchVal={setSearchVal} darkOn={darkOn} setDarkOn={setDarkOn} orange={orange} peach={peach} cardBg={cardBg} textCol={textCol} borderCol={borderCol} />
-      
-      <div key={pageKey} style={{ maxWidth: 1000, margin: "0 auto", animation: "fadeIn 0.25s ease" }}>
-        {renderPage()}
+      <Navbar {...props} setPage={setPage} setDarkOn={setDarkOn} setSearchVal={setSearchVal} />
+      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+        {page === "home" && <HomePage {...props} />}
+        {page === "cart" && <CartPage {...props} />}
+        {page === "wish" && <WishPage {...props} />}
+        {page === "settings" && <SettingsPage {...props} setDarkOn={setDarkOn} />}
       </div>
-
-      {viewProd && <ProductModal prod={viewProd} cartItems={cartItems} wishItems={wishItems} ratings={ratings} onAddCart={addToCart} onWishToggle={wishToggle} onRate={rateProduct} onClose={() => setViewProd(null)} darkOn={darkOn} cardBg={cardBg} textCol={textCol} mutedCol={mutedCol} borderCol={borderCol} orange={orange} peach={peach} />}
-      
-      {showTop && (
-        <button
-          onClick={() => window.scrollTo({top: 0, behavior: "smooth"})}
-          style={{ position: "fixed", bottom: 80, right: 24, zIndex: 999, background: orange, color: "white", border: "none", borderRadius: "50%", width: 44, height: 44, fontSize: 20, cursor: "pointer", boxShadow: "0 4px 12px rgba(255,107,53,0.4)", animation: "popIn 0.2s ease" }}
-        >↑</button>
-      )}
-
+      {viewProd && <ProductModal prod={viewProd} {...props} onClose={() => setViewProd(null)} />}
       <Toast msg={toastMsg} />
-      <Footer darkOn={darkOn} cardBg={cardBg} textCol={textCol} mutedCol={mutedCol} borderCol={borderCol} orange={orange} />
+      <Footer {...props} />
     </div>
   )
 }
